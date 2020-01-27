@@ -1,7 +1,8 @@
 import telebot
+from logic import get_file, get_user, write_to_db, write_to_folder, convert_to_wav
 
 TOKEN = '1072903861:AAEooMCno1LK2Ap7WdCaTaMPcZ_A2L7XWAc'
-need_extension = ['ogg','mp3']
+PATH = 'C:/Users/Marsel/Desktop/bussiness/projects/Python/bots/tz_dsplabs/audio/'
 
 bot = telebot.TeleBot(token=TOKEN)
 
@@ -24,23 +25,20 @@ def echo_message(msg):
 @bot.message_handler(content_types=['voice'])
 def load_audio(message):
     try:
-        chat_id = message.chat.id
-        user_id = message.from_user.id
+        audio, audio_id = get_file(bot, message)
 
-        file_info = bot.get_file(message.voice.file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
+        user_key = get_user(message)
 
-        src = 'C:/Users/Marsel/Desktop/bussiness/projects/Python/bots/tz_dsplabs/audio/' + file_info.file_id
-        with open(src, 'wb') as new_file:
-            new_file.write(downloaded_file)
+        write_to_folder(PATH, user_key, audio_id, audio)
+
+        write_to_db(audio_id, user_key)
+        
+        convert_to_wav(PATH, audio, user_key)
+        
 
         bot.reply_to(message, "Пожалуй, я сохраню это")
     except Exception as e:
         bot.reply_to(message, e)
-
-@bot.message_handler(content_types=['voice'])
-def load_chat_audio(message):
-    pass
 
 if __name__ == '__main__':
     bot.polling()
