@@ -1,8 +1,6 @@
 import telebot
-from logic import get_file, get_user, write_to_db, write_to_folder, convert_to_wav
-
-TOKEN = '1072903861:AAEooMCno1LK2Ap7WdCaTaMPcZ_A2L7XWAc'
-PATH = 'C:/Users/Marsel/Desktop/bussiness/projects/Python/bots/tz_dsplabs/audio/'
+from config import TOKEN, PATH_AUDIO, PATH_PHOTO
+from logic import get_audio_file, get_photo_file, get_user,write_audio_to_db, write_photo_to_db, write_to_folder, convert_to_wav, check_face
 
 bot = telebot.TeleBot(token=TOKEN)
 
@@ -25,20 +23,42 @@ def echo_message(msg):
 @bot.message_handler(content_types=['voice'])
 def load_audio(message):
     try:
-        audio, audio_id = get_file(bot, message)
+        audio, audio_id = get_audio_file(bot, message)
 
-        user_key = get_user(message)
+        user_key, PATH = get_user(message, PATH_AUDIO)
 
-        write_to_folder(PATH, user_key, audio_id, audio)
+        write_to_folder(PATH, audio_id, audio)
 
-        write_to_db(audio_id, user_key)
-        
-        convert_to_wav(PATH, audio, user_key)
+        sound_name = convert_to_wav(PATH, audio_id, user_key)
+
+        write_audio_to_db(sound_name, user_key)
         
 
         bot.reply_to(message, "Пожалуй, я сохраню это")
     except Exception as e:
         bot.reply_to(message, e)
+
+@bot.message_handler(content_types=['photo'])
+def load_image(message):
+    try:
+        photo, photo_id = get_photo_file(bot, message)
+
+        user_key, PATH = get_user(message, PATH_PHOTO)
+
+        write_to_folder(PATH, photo_id, photo)
+
+        is_face, photo_name = check_face(PATH, photo_id)
+
+        if is_face:
+            write_photo_to_db(photo_name, user_key)
+            bot.reply_to(message, "Пожалуй, я сохраню это")
+        else:
+            bot.reply_to(message, "Не вижу лица")
+
+        
+    except Exception as e:
+        bot.reply_to(message, e)
+
 
 if __name__ == '__main__':
     bot.polling()
