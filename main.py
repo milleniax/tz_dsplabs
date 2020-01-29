@@ -1,31 +1,53 @@
 import telebot
+import time
 from config import TOKEN, PATH_AUDIO, PATH_PHOTO
-from logic import get_audio_file, get_photo_file, get_user,write_audio_to_db, write_photo_to_db, write_to_folder, convert_to_wav, check_face
+from logic import get_audio_file, get_photo_file, get_user,write_audio_to_db, write_photo_to_db, write_to_folder, convert_to_wav, check_face, get_photo_from_db, get_audio_from_db
 
 bot = telebot.TeleBot(token=TOKEN)
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'help'])
 def process_start_command(message):
-    bot.send_message(message.chat.id, "Привет!\nНапиши мне что-нибудь!")
+    bot.send_message(message.chat.id, "Привет!\nЯ бот для сохранения твоих голосовых сообщений(формат wav)\nи фото(без лица сохранять не буду)!\n\nВывести все сохраненные аудио: /all_voices\nВывести все фото: /all_photo")
 
 
-@bot.message_handler(commands=['help'])
-def process_help_command(message):
-    bot.send_message(message.chat.id, "Напиши мне что-нибудь, и я отпрпавлю этот текст тебе в ответ!")
+@bot.message_handler(commands=['all_photo'])
+def get_all_photo(message):
+    photo_list = get_photo_from_db(get_user(message))
+    for photo in photo_list:
+        file_photo = open(PATH_PHOTO + get_user(message) + 
+                            '/' + str(*photo), 'rb')
+        bot.send_photo(message.chat.id, file_photo)
+        file_photo.close()
+
+
+@bot.message_handler(commands=['all_voices'])
+def get_all_audio(message):
+    audio_list = get_audio_from_db(get_user(message))
+    for voice in audio_list:
+        voice = open(PATH_AUDIO + get_user(message) +
+                          '/' + str(*voice), 'rb')
+        bot.send_audio(message.chat.id, voice)
+        voice.close()
+        time.sleep(.25)
 
 
 @bot.message_handler()
-def echo_message(msg):
-    bot.send_message(msg.from_user.id, msg.text)
+def echo_message(message):
+    bot.send_message(message.from_user.id, "Отправь голосовое или фото(/help для полной информации)")
 
 
 @bot.message_handler(content_types=['voice'])
 def load_audio(message):
     try:
+        bot.send_message(
+            message.from_user.id, "Обрабатываю...")
+
         audio, audio_id = get_audio_file(bot, message)
 
-        user_key, PATH = get_user(message, PATH_AUDIO)
+        user_key = get_user(message)
+
+        PATH = PATH_AUDIO + user_key + '/'
 
         write_to_folder(PATH, audio_id, audio)
 
@@ -41,9 +63,14 @@ def load_audio(message):
 @bot.message_handler(content_types=['photo'])
 def load_image(message):
     try:
+        bot.send_message(
+        message.from_user.id, "Обрабатываю...")
+
         photo, photo_id = get_photo_file(bot, message)
 
-        user_key, PATH = get_user(message, PATH_PHOTO)
+        user_key = get_user(message)
+
+        PATH = PATH_PHOTO + user_key + '/'
 
         write_to_folder(PATH, photo_id, photo)
 

@@ -1,9 +1,9 @@
 create table user(
-    user_name varchar(100) primary key
+    user_name varchar(100) primary key not null
 );
 
 create table audio(
-    audio varchar(100) primary key
+    audio varchar(100) primary key not null
 );
 
 create table photo(
@@ -12,8 +12,8 @@ create table photo(
 
 create table user_photo(
     up_id integer primary key not null,
-    up_user integer not null,
-    up_photo integer not null,
+    up_user varchar(100) not null,
+    up_photo varchar(100) not null,
     foreign key (up_user) references user(user_name),
     foreign key (up_photo) references photo(photo)
 );

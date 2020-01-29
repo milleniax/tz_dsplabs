@@ -17,12 +17,12 @@ def get_audio_file(bot, message):
     downloaded_file = bot.download_file(file_info.file_path)
     return downloaded_file, file_info.file_id
 
-def get_user(message, PATH):
+
+def get_user(message):
     user_id = message.from_user.id
     username = message.from_user.username
     user_key = username + '(id=' + str(user_id) + ')'
-    PATH = PATH + user_key + '/'
-    return user_key, PATH
+    return user_key
 
 def write_to_folder(PATH, doc_id, doc):
     try:
@@ -97,4 +97,24 @@ def check_face(PATH, photo_id):
     else:
         return False, photo_name
     
+def get_photo_from_db(user_key):
+    con = sqlite3.connect('db.db')
+    cursor = con.cursor()
+    cursor.execute("SELECT up_photo from user_photo where up_user == ?",
+                   (user_key,))
+    photo_list = cursor.fetchall()
+    con.commit()
+    con.close()
+    return photo_list
+
+
+def get_audio_from_db(user_key):
+    con = sqlite3.connect('db.db')
+    cursor = con.cursor()
+    cursor.execute("SELECT ua_audio from user_audio where ua_user == ?",
+                   (user_key,))
+    audio_list = cursor.fetchall()
+    con.commit()
+    con.close()
+    return audio_list
 
