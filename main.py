@@ -62,29 +62,60 @@ def load_audio(message):
 
 @bot.message_handler(content_types=['photo'])
 def load_image(message):
-    try:
+    
         bot.send_message(
         message.from_user.id, "Обрабатываю...")
 
-        photo, photo_id = get_photo_file(bot, message)
+        try:
 
-        user_key = get_user(message)
+            photo, photo_id = get_photo_file(bot, message)
 
-        PATH = PATH_PHOTO + user_key + '/'
+        except Exception as e:
+            print("1")
+            bot.reply_to(message, e)
 
-        write_to_folder(PATH, photo_id, photo)
+        try:
 
-        is_face, photo_name = check_face(PATH, photo_id)
+            user_key = get_user(message)
 
-        if is_face:
-            write_photo_to_db(photo_name, user_key)
-            bot.reply_to(message, "Пожалуй, я сохраню это")
-        else:
-            bot.reply_to(message, "Не вижу лица")
+        except Exception as e:
+            print("2")
+            bot.reply_to(message, e)
+
+        try:
+            
+            PATH = PATH_PHOTO + user_key + '/'
+
+        except Exception as e:
+            print("3")
+            bot.reply_to(message, e)
 
         
-    except Exception as e:
-        bot.reply_to(message, e)
+        try: 
+            write_to_folder(PATH, photo_id, photo)
+
+        except Exception as e:
+            print("4")
+            bot.reply_to(message, e)
+
+        try:
+
+            is_face, photo_name = check_face(PATH, photo_id)
+
+        except Exception as e:
+            print("5")
+            bot.reply_to(message, e)
+
+        try:
+            if is_face:
+                write_photo_to_db(photo_name, user_key)
+                bot.reply_to(message, "Пожалуй, я сохраню это")
+            else:
+                bot.reply_to(message, "Не вижу лица")
+
+        except Exception as e:
+            print("6")
+            bot.reply_to(message, e)
 
 
 if __name__ == '__main__':

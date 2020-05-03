@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 from PIL import Image
 from config import PATH_CV2
+import datetime
 
 def get_photo_file(bot, message):
     file_info = bot.get_file(message.photo[-1].file_id)
@@ -19,10 +20,13 @@ def get_audio_file(bot, message):
 
 
 def get_user(message):
-    user_id = message.from_user.id
+    user_id = str(message.from_user.id)
     username = message.from_user.username
-    user_key = username + '(id=' + str(user_id) + ')'
-    return user_key
+    if username != None:
+        user_key = username + '(id=' + user_id + ')'
+        return user_key
+    else:
+        return user_id
 
 def write_to_folder(PATH, doc_id, doc):
     try:
@@ -64,7 +68,7 @@ def convert_to_wav(PATH, audio_id, user_key):
     i = len(os.listdir(PATH))
 
     sound = audiosegment.from_file(PATH + audio_id).resample(sample_rate_Hz=16000)
-    sound_name = "audio{}.wav".format(i)
+    sound_name = "audio{}({}).wav".format(i, datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S"))
     sound.export(PATH + sound_name, format="wav")
 
     os.remove(PATH + audio_id)
@@ -89,7 +93,7 @@ def check_face(PATH, photo_id):
     rgb_im = im.convert('RGB')
     os.remove(PATH + photo_id)
     i = len(os.listdir(PATH)) + 1
-    photo_name = 'photo{}.png'.format(i)
+    photo_name = "photo{}({}).png".format(i,datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S"))
 
     if len(faces) > 0:
         rgb_im.save(PATH + photo_name)
