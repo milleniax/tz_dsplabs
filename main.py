@@ -1,10 +1,13 @@
 import telebot
+import os
 import time
+from flask import Flask, request
 from config import TOKEN, PATH_AUDIO, PATH_PHOTO
 from logic import get_audio_file, get_photo_file, get_user,write_audio_to_db, write_photo_to_db, write_to_folder, convert_to_wav, check_face, get_photo_from_db, get_audio_from_db
 
 bot = telebot.TeleBot(token=TOKEN)
 
+server = Flask(__name__)
 
 @bot.message_handler(commands=['start', 'help'])
 def process_start_command(message):
@@ -117,6 +120,20 @@ def load_image(message):
             print("6")
             bot.reply_to(message, e)
 
+
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates(
+        [telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(
+        url='https://calm-garden-14944.herokuapp.com/' + TOKEN)
+    return "!", 200
 
 if __name__ == '__main__':
     server.debug = True
